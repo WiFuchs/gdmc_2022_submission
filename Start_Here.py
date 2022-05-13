@@ -1,35 +1,5 @@
 #! /usr/bin/python3
-"""### Generate a simple example village.
 
-This file contains a comprehensive collection of functions designed
-to introduce new coders to the GDMC HTTP client in Python.
-
-The source code of this module contains examples for:
-* How to structure a file neatly (search 'STRUCTURE')
-* Requesting the build area (search 'BUILDAREA')
-* Introduction to world slices (search 'WORLDSLICE')
-* Introduction to basic heightmaps (search 'HEIGHTMAP')
-* Introduction to basic geometric shapes (search 'GEO')
-
-NOTE: We recommend creating your own files instead of modifying or adding code
-    to these pre-existing files.
-NOTE: If part of the program is running to fast for you to understand, insert
-    >>> from time import sleep
-    and
-    >>> sleep(0.1)
-    at the appropriate locations for a delay of 1/10 of a second
-    Alternatively, inserting
-    >>> input("Waiting for user to press [Enter]")
-    will pause the program at the point.
-NOTE: This file will only be updated in the case of breaking changes
-    and will not showcase new features!
-
-INFO: Should you have any questions regarding this software, feel free to visit
-    the #ℹ-framework-support channel on the GDMC Discord Server
-    (Invite link: https://discord.gg/V9MW65bD)
-
-This file is not meant to be imported.
-"""
 
 # === STRUCTURE #0
 # These are technical values, you may ignore them or add them in your own files
@@ -43,11 +13,15 @@ __date__ = "17 February 2022"
 # These are the modules (libraries) we will use in this code
 # We are giving these modules shorter, but distinct, names for convenience
 from random import randint
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
 
 from gdpc import geometry as GEO
 from gdpc import interface as INTF
 from gdpc import toolbox as TB
 from gdpc import worldLoader as WL
+from util.map import Map
 
 # === STRUCTURE #2
 # These variables are global and can be read from anywhere in the code
@@ -119,6 +93,15 @@ def buildPerimeter():
         GEO.placeCuboid(ENDX, y - 2, z, ENDX, y, z, "prismarine")
         GEO.placeCuboid(ENDX, y + 1, z, ENDX, y + 4, z, "prismarine_wall")
 
+
+def buildRoad(x1, z1, x2, z2):
+    heights = WORLDSLICE.heightmaps["MOTION_BLOCKING_NO_LEAVES"]
+    direct_points = GEO.line2d(x1, z1, x2, z2)
+    print(direct_points)
+    expanded_points = ((p[0] + x_offset, p[1] + z_offset) for x_offset in [-1, 0, 1] for z_offset in [-1, 0, 1] for p in direct_points)
+    real_points = {(p[0] + STARTX, heights[(p[0], p[1])], p[1]+STARTZ) for p in expanded_points}
+    print(real_points)
+    GEO.placeFromList(real_points, "granite")
 
 def buildRoads():
     """Build a road from north to south and east to west."""
@@ -261,6 +244,38 @@ def buildTower(x, z):
                     "warped_door[facing=north, half=upper]")
 
 
+def visualize_interest():
+    heights = Map.calc_clear_heightmap(WORLDSLICE)
+    heights = heights.astype(np.uint8)
+
+    # params = cv2.SimpleBlobDetector_Params()
+    # params.filterByArea = False
+    # params.filterByInertia = False
+    # params.filterByConvexity = False
+    #
+    # detector = cv2.SimpleBlobDetector_create(params)
+    # keypoints = detector.detect(heights)
+    # im_with_keypoints = cv2.drawKeypoints(heights, keypoints, np.array([]), (0, 0, 255),
+    #                                       cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    #
+    # print(keypoints)
+
+    ret, thresh = cv2.adaptiveThreshold(h)
+    contours = cv2.findContours(thresh, mode=cv2.RETR_LIST, method=cv2.CHAIN_APPROX_NONE)
+    print(contours, len(contours))
+    im_with_contours = cv2.drawContours(heights, contours[0], -1, (0,0,255), 3)
+
+    for arr in [heights, thresh, im_with_contours]:
+        plt.figure()
+        plt_image = cv2.cvtColor(arr, cv2.COLOR_BGR2RGB)
+        imgplot = plt.imshow(plt_image)  # NOQA
+    plt.show()
+
+    # cv2.imshow("Keypoints", im_with_keypoints)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
+
 # === STRUCTURE #4
 # The code in here will only run if we run the file directly (not imported)
 # This prevents people from accidentally running your generator
@@ -269,12 +284,17 @@ if __name__ == '__main__':
     #     possible so you can find mistakes more easily
 
     try:
-        height = WORLDSLICE.heightmaps["MOTION_BLOCKING"][(STARTX, STARTY)]
-        INTF.runCommand(f"tp @a {STARTX} {height} {STARTZ}")
-        print(f"/tp @a {STARTX} {height} {STARTZ}")
-        buildPerimeter()
-        buildRoads()
-        buildCity()
+        # height = WORLDSLICE.heightmaps["MOTION_BLOCKING"][(0, 0)]
+        # print(WORLDSLICE.heightmaps)
+        # INTF.runCommand(f"tp @a {STARTX} {height} {STARTZ}")
+        # print(f"/tp @a {STARTX} {height} {STARTZ}")
+        # print(WORLDSLICE.getBiomeAt(0, 0, 0))
+        # visualize_interest()
+        # buildRoad(0, 0, 20, 50)
+        # buildPerimeter()
+        # buildRoads()
+        # buildCity()
+
 
         print("Done!")
     except KeyboardInterrupt:   # useful for aborting a run-away program

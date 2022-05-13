@@ -1,0 +1,2 @@
+class ActionLogger:
+    pass
