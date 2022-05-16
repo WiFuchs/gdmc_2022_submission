@@ -2,7 +2,6 @@ import utils.projectMath as _math
 import utils.util as util
 import utils.projectMath as projectMath
 import lib.interfaceUtils as interfaceUtils
-import generation.floodFill as floodFill
 import random
 import math
 
@@ -295,64 +294,7 @@ class BaseStructure:
                 lines[4], lines[5], lines[6], lines[7])
 
 
-    """
-    Place ground under the structure at given position
-    worldModification : class used to place blocks
-    buildingCondition : condition used to build a structures
-    """
-    def placeSupportUnderStructure(self, worldModif, buildingCondition):
-        if not "ground" in self.info.keys():
-            return
 
-        zones = []
-        if "info" in self.info["ground"].keys():
-            if "all" == self.info["ground"]["info"] :
-                zones.append([0, 0, self.size[0] - 1, self.size[2] - 1])
-        elif "zones" in self.info["ground"].keys() :
-            zones = self.info["ground"]["zones"]
-
-        for zone in zones : 
-            for x in range(zone[0], zone[2] + 1):
-                for z in range(zone[1], zone[3] + 1):
-                    position = self.returnWorldPosition( 
-                        [ x, 0, z],
-                        buildingCondition["flip"], buildingCondition["rotation"], 
-                        buildingCondition["referencePoint"], buildingCondition["position"] 
-                    )
-
-                    if worldModif.interface.getBlock(position[0], position[1], position[2]) in floodFill.FloodFill.IGNORED_BLOCKS:
-                        i = -2 
-                        while worldModif.interface.getBlock(position[0], position[1] + i, position[2]) in floodFill.FloodFill.IGNORED_BLOCKS:
-                            i -= 1
-                        
-                        worldModif.fillBlocks(position[0], position[1], position[2], position[0], position[1] + i, position[2], 
-                        buildingCondition["replacements"]["ground2"])
-
-
-    """
-    Place air at given position
-    worldModification : class used to place blocks
-    buildingCondition : condition used to build a structures
-    """
-    def placeAirZones(self, worldModif, buildingCondition):
-        if buildingCondition["replaceAllAir"] == 3:
-            buildingCondition["replaceAllAir"] = self.info["air"]["preferedAirMode"]
-
-        if buildingCondition["replaceAllAir"] == 2:
-            for zones in self.info["air"]["replacements"]:
-                blockFrom = self.returnWorldPosition([ zones[0], zones[1] + 1, zones[2] ],
-                                                     buildingCondition["flip"], buildingCondition["rotation"], 
-                                                     buildingCondition["referencePoint"], buildingCondition["position"])
-                blockTo   = self.returnWorldPosition([ zones[3], zones[4] + 1, zones[5] ],
-                                                     buildingCondition["flip"], buildingCondition["rotation"], 
-                                                     buildingCondition["referencePoint"], buildingCondition["position"])
-
-                for x in range(min(blockFrom[0], blockTo[0]), max(blockFrom[0], blockTo[0]) + 1):
-                    for z in range(min(blockFrom[2], blockTo[2]), max(blockFrom[2], blockTo[2]) + 1):
-                        if worldModif.interface.getBlock(x, blockTo[1] + 1, z) in BaseStructure.AIR_FILLING_PROBLEMATIC_BLOCS:
-                            worldModif.setBlock(x, blockTo[1] + 1, z, "minecraft:stone", placeImmediately=True)
-                                                     
-                worldModif.fillBlocks(blockFrom[0], blockFrom[1], blockFrom[2], blockTo[0], blockTo[1], blockTo[2], BaseStructure.AIR_BLOCKS[0])
 
     """
     Get the facing of the main entry depending of the flip and rotation
