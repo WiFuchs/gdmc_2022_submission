@@ -149,7 +149,7 @@ def buildStructure(x, z, radius, heightMap, referenceCoordinates, rotation, stru
 
     xCoordinate = x + ((size[0]-2)//2) - 1
     zCoordinate = z + ((size[2]-2)//2) - 1
-    yCoordinate = -(heightMap[xCoordinate][zCoordinate] - 1)
+    yCoordinate = (heightMap[xCoordinate][zCoordinate] - 1)
 
 
 
@@ -157,9 +157,8 @@ def buildStructure(x, z, radius, heightMap, referenceCoordinates, rotation, stru
     print("Building " + chosenStruct + " @ coordinates", xCoordinate, yCoordinate, zCoordinate)
 
     ## get biome 
-    biomeID = util.getNameBiome(util.getBiome(xCoordinate, zCoordinate, 10, 10))
-
-    
+    # biomeID = util.getNameBiome(util.getBiome(xCoordinate, zCoordinate, 10, 10))
+    biomeID = util.getNameBiome(util.getBiome(referenceCoordinates[0] + xCoordinate, referenceCoordinates[2]  + zCoordinate, 10, 10))
 
     if str(biomeID) not in biomesBlocks:
         replacementBiomeBlocks = biomesBlocks["0"]
@@ -169,7 +168,7 @@ def buildStructure(x, z, radius, heightMap, referenceCoordinates, rotation, stru
     
 
 
-    struct.build([xCoordinate, yCoordinate, zCoordinate], referenceCoordinates, rotation, worlModif, replacementBiomeBlocks)
+    struct.build([xCoordinate, -yCoordinate, zCoordinate], referenceCoordinates, rotation, worlModif, replacementBiomeBlocks)
 
 
 
