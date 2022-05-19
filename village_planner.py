@@ -49,8 +49,9 @@ class VillagePlanner:
 
         self.buildable_points = np.where((slope <= 2) & (self.build_area.water_mask == 1),
                                          self.build_area.heightmap_no_trees, 0)
-        self.build_map = np.copy(self.buildable_points)
+        self.build_map = np.copy(self.buildable_points)  # build map is purely for displaying buildings/roads/etc
         self.road_map = np.zeros_like(self.buildable_points, dtype="bool")
+        self.building_locations = set()
 
     def display_map(self):
         median = cv2.medianBlur(self.build_area.heightmap_no_trees, 11)
@@ -116,12 +117,16 @@ class VillagePlanner:
                         neighbor.f_score = tentative_g + neighbor.calc_h_score(self.build_area, closest_building)
                         open.put(neighbor)
 
-    def seed_buildings(self, goal_buildings: int):
+    def seed_buildings(self, goal_buildings: int, display_map=True):
+        """
+        Wipe the old building seeds and create new building seeds.
+        This populates self.building_locations
+        """
         num_buildings = 0
-        building_locations = set()
+        self.building_locations = set()
         attraction_eq = AttractRepulse(min_dist=7, max_dist=100, break_even=17)
         retries = 0
-        force_buildings = True      # force the number of buildings to be exactly goal_buildings
+        force_buildings = True  # force the number of buildings to be exactly goal_buildings
         while num_buildings < goal_buildings and (retries < goal_buildings * 200 or force_buildings):
             retries += 1
             point = self.build_area.get_random_point()
@@ -131,8 +136,8 @@ class VillagePlanner:
                 continue
 
             closest_point = None
-            if building_locations:
-                closest_point = sorted(building_locations, key=lambda bp: math.dist(bp, point))[0]
+            if self.building_locations:
+                closest_point = sorted(self.building_locations, key=lambda bp: math.dist(bp, point))[0]
                 attraction_eq.set_point_of_interest(closest_point[0], closest_point[1])
 
             interest = attraction_eq.calculate_interest(self.build_area, point[0], point[1])
@@ -141,7 +146,7 @@ class VillagePlanner:
             build_probability = random.uniform(interest, 1.0)
             if build_probability >= 0.9:
                 # add the new building
-                building_locations.add(point)
+                self.building_locations.add(point)
                 num_buildings += 1
                 retries = 0
 
@@ -149,18 +154,19 @@ class VillagePlanner:
                 if closest_point is not None:
                     self.add_building_to_road(point[0], point[1], closest_point)
 
-        # mark building locations in white
-        for pt in building_locations:
-            self.build_map[pt] = 255
-            self.build_map = cv2.circle(self.build_map, (pt[1], pt[0]), 7, (255, 255, 255))
+        if display_map:
 
+            # mark building locations in white
+            for pt in self.building_locations:
+                self.build_map[pt] = 255
+                self.build_map = cv2.circle(self.build_map, (pt[1], pt[0]), 7, (255, 255, 255))
 
-        # mark roads on build map
-        self.build_map = np.where(self.road_map == 1, 255, self.build_map)
+            # mark roads on build map
+            self.build_map = np.where(self.road_map == 1, 255, self.build_map)
 
-        cv2.imshow("build map", self.build_map)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+            cv2.imshow("build map", self.build_map)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
 
 
 class PathNode:
