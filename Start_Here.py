@@ -1,30 +1,4 @@
 #! /usr/bin/python3
-"""### Generate a simple example village.
-This file contains a comprehensive collection of functions designed
-to introduce new coders to the GDMC HTTP client in Python.
-The source code of this module contains examples for:
-* How to structure a file neatly (search 'STRUCTURE')
-* Requesting the build area (search 'BUILDAREA')
-* Introduction to world slices (search 'WORLDSLICE')
-* Introduction to basic heightmaps (search 'HEIGHTMAP')
-* Introduction to basic geometric shapes (search 'GEO')
-NOTE: We recommend creating your own files instead of modifying or adding code
-    to these pre-existing files.
-NOTE: If part of the program is running to fast for you to understand, insert
-    >>> from time import sleep
-    and
-    >>> sleep(0.1)
-    at the appropriate locations for a delay of 1/10 of a second
-    Alternatively, inserting
-    >>> input("Waiting for user to press [Enter]")
-    will pause the program at the point.
-NOTE: This file will only be updated in the case of breaking changes
-    and will not showcase new features!
-INFO: Should you have any questions regarding this software, feel free to visit
-    the #ℹ-framework-support channel on the GDMC Discord Server
-    (Invite link: https://discord.gg/V9MW65bD)
-This file is not meant to be imported.
-"""
 
 # === STRUCTURE #0
 # These are technical values, you may ignore them or add them in your own files
@@ -43,12 +17,13 @@ from gdpc import geometry as GEO
 from gdpc import interface as INTF
 from gdpc import toolbox as TB
 from gdpc import worldLoader as WL
-import utils.util as util
+import util.util as util
 import structureLoader as loader
 import lib.interfaceUtils as iu
-import utils.worldModification as worlModif
+import util.worldModification as worlModif
 
 import json
+from util.map import Map
 
 # === STRUCTURE #2
 # These variables are global and can be read from anywhere in the code

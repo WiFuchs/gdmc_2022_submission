@@ -1,5 +1,5 @@
-import utils.projectMath as projectMath
-import utils.util as util
+import util.projectMath as projectMath
+import util.util as util
 from baseStructure import *
 
 from nbt import nbt

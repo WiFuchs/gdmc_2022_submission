@@ -25,7 +25,7 @@ def getBiome(x, z, dx, dz):
 
     biomeinfo = biomeId[6].split(";")
     biome = biomeinfo[1].split(",")
-    print(biome[0])
+
     return biome[0]
     
 def getAllBiome():
@@ -51,10 +51,10 @@ def getAllBiome():
         
 def getNameBiome(biome):
     filin = open("data/biome.txt")
-    lignes = filin.readlines()
-    biomename = lignes[int(biome)].split(":")[0]
+    lines = filin.readlines()
+    biomename = lines[int(biome)].split(":")[0]
     print(biomename)
-    value = int(lignes[int(biome)].split(":")[1])
+    value = int(lines[int(biome)].split(":")[1])
     return value
 
 

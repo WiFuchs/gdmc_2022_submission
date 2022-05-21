@@ -1,6 +1,6 @@
-import utils.projectMath as _math
-import utils.util as util
-import utils.projectMath as projectMath
+import util.projectMath as _math
+import util.util as util
+import util.projectMath as projectMath
 import lib.interfaceUtils as interfaceUtils
 import random
 import math
