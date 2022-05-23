@@ -109,7 +109,6 @@ def buildTower(x, y, z, height=10, radius=10):
 
 
 
-
 def buildStructure(x, z, radius, heightMap, referenceCoordinates, rotation, structures, biomesBlocks, worlModif):
 
     potentialStructs = []
@@ -194,7 +193,9 @@ if __name__ == '__main__':
         rotation = 0 
         #rotation : No rotation = 0, rotation 90° = 1, rotation 180° = 2, rotation 270° = 3
 
-        # buildTower(STARTX + xloc, yloc, STARTZ + zloc, height=heightMap, radius=radius)
+        yCoordinate = heightMap[xloc][zloc] - 1
+
+        buildTower(xloc + STARTX, yCoordinate, zloc + STARTZ, height=20, radius=1)
 
         
         buildStructure(xloc, zloc, radius, heightMap, referenceCoordinates, rotation, structures, biomesBlocks, worlModif)
