@@ -19,16 +19,26 @@ from gdpc import worldLoader as WL
 
 from helper_functions import convert_coords
 
-def prep_land(buildings, planner):
-    """
-    This function will go throguh all buildings 
-    """
-    for building in buildings:
-        this_x, this_z = building
-        print(f'This building is at {this_x} x {this_z}')
-        prep_single_building(planner.build_area.worldslice, this_x, this_z, this_x+5, this_z+5, 'oak_planks', 10)
 
 
+def find_radius(x1, z1, radius, heightmap):
+    bottom_left_x = x1 - int(radius/2)
+    if bottom_left_x < 0:
+        bottom_left_x = 0
+    bottom_left_z = z1 - int(radius/2)
+    if bottom_left_z < 0:
+        bottom_left_z = 0
+
+    top_right_x = x1 + int(radius/2)
+    if top_right_x >= len(heightmap):
+        top_right_x = len(heightmap) - 1
+    top_right_z = z1 + int(radius/2)
+    if top_right_z >= len(heightmap):
+        top_right_z = len(heightmap) - 1
+
+    return bottom_left_x, bottom_left_z, top_right_x, top_right_z
+    
+     
 def prep_single_building(WORLDSLICE, x1, z1, x2, z2, base_block, height):
     """
     This function simply receives a rectangle and a desired y level, and places a rectangle of blocks there, 
@@ -51,8 +61,8 @@ def prep_single_building(WORLDSLICE, x1, z1, x2, z2, base_block, height):
 
     # Find desired y height
     heights_list = []
-    for z in range(z1, z2+1):
-        for x in range(x1, x2+1):
+    for z in range(z1, z2):
+        for x in range(x1, x2):
             heights_list.append(heights[(x, z)])
     desired_y = round(np.mean(np.array(heights_list))) - 1
 
@@ -72,6 +82,16 @@ def prep_single_building(WORLDSLICE, x1, z1, x2, z2, base_block, height):
     global_end = convert_coords((x2, z2), (start_x, start_z))
     GEO.placeCuboid(global_start[0], desired_y+1, global_start[1], global_end[0], desired_y+height, global_end[1], 'air') 
 
+
+def prep_land(buildings, planner):
+    """
+    This function will go throguh all buildings 
+    """
+    for building in buildings:
+        this_x, this_z = building
+        x1, z1, x2, z2 = find_radius(this_x, this_z, 5, planner.build_area.worldslice.heightmaps["MOTION_BLOCKING"])
+        print(f'This building is at {this_x} x {this_z}')
+        prep_single_building(planner.build_area.worldslice, x1, z1, x2, z2, 'oak_planks', 10)
 
 
 # BELOW IS USED FOR TESTING
