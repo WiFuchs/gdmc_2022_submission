@@ -53,7 +53,6 @@ def getNameBiome(biome):
     filin = open("data/biome.txt")
     lines = filin.readlines()
     biomename = lines[int(biome)].split(":")[0]
-    print(biomename)
     value = int(lines[int(biome)].split(":")[1])
     return value
 

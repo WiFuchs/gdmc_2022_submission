@@ -158,11 +158,7 @@ if __name__ == '__main__':
         biomesBlocks = json.load(json_file)
 
     for xloc, zloc in planner.building_locations:
-        print(xloc, zloc)
-
         yCoordinate = heightMap[xloc][zloc] - 1
         # buildTower(xloc + STARTX, yCoordinate, zloc + STARTZ, height=20, radius=1)
 
         buildStructure(xloc, zloc, 10, heightMap, referenceCoordinates, 0, structures, biomesBlocks, worlModif)
-
- 
