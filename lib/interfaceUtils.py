@@ -149,7 +149,7 @@ class Interface():
         if self.caching:
             self.cache[(x, y, z)] = blockStr
         # mark block as decayed
-        if not checkOutOfBounds(x, y, z) and globalDecay is not None:
+        if globalDecay is not None:
             x, y, z = global2buildlocal(x, y, z)
             globalDecay[x][y][z] = True
 

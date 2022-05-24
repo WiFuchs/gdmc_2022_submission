@@ -29,14 +29,13 @@ def generate_structures(building_locations, heightMap, referenceCoordinates, rot
     worldModifier = worlModif.WorldModification(iu_interface)
 
     for xloc, zloc in building_locations:
-        print(xloc, zloc)
 
-        yCoordinate = heightMap[xloc][zloc] - 1
+        # yCoordinate = heightMap[xloc][zloc] - 1
         # buildTower(xloc + STARTX, yCoordinate, zloc + STARTZ, height=20, radius=1)
 
 
         buildStructure(xloc, zloc, 10, heightMap, referenceCoordinates, rotation, structures, biomesBlocks, worldModifier)
-    pass
+    
 
 def buildTower(x, y, z, height=10, radius=10):
 
