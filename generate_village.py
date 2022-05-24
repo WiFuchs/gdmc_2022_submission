@@ -1,8 +1,19 @@
+# Python imports
 import numpy as np
 from gdpc import interface
+import lib.interfaceUtils as iu
+import util.worldModification as worlModif
+
+# Local imports
 from village_planner import VillagePlanner, BuildArea
-from build_road import build_road
+
+# Prepares land for placing buildings 
 from prep_land import prep_land
+# Builds roads
+from build_road import build_road
+# Places down structures
+from generate_structure import generate_structures
+# Contains various logic to help with the village generation.
 from helper_functions import *
 
 def driver():
@@ -25,8 +36,6 @@ def driver():
     if VISUALIZE_BUILD_AREA:
         build_perimeter_around_BA((sx, sy, sz), (ex, ey, ez))
 
-
-    # interface.runCommand(f"tp @a {sx} {256} {sz}")
     
     # Create build area object
     build_area = BuildArea(sx, sz, ex, ez)
@@ -46,6 +55,22 @@ def driver():
 
     # For all buildings, prep the land and build a base
     prep_land(building_locations, planner)
+
+    # Build structures at all building seeds
+    referenceCoordinates = [sx, sy, sz]
+
+    generate_structures(
+        building_locations, 
+        build_area.worldslice.heightmaps["MOTION_BLOCKING"],
+        referenceCoordinates,
+        rotation = 0
+    )
+
+
+
+
+
+    
     
 
 

@@ -47,6 +47,7 @@ def prep_single_building(WORLDSLICE, x1, z1, x2, z2, base_block, height):
     start_x, start_z, _, _ = WORLDSLICE.rect
 
     print(f"Heights: {heights}")
+    print(f"Prepping single building for {x1} {z1} to {x2} {z2}")
 
     # Find desired y height
     heights_list = []
