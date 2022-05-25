@@ -7,13 +7,9 @@ import util.worldModification as worlModif
 # Local imports
 from village_planner import VillagePlanner, BuildArea
 
-# Prepares land for placing buildings 
 from prep_land import prep_land
-# Builds roads
-from build_road import build_road
-# Places down structures
+from build_road import build_roads
 from generate_structure import generate_structures
-# Contains various logic to help with the village generation.
 from helper_functions import *
 
 def driver():
@@ -58,13 +54,15 @@ def driver():
 
     # Build structures at all building seeds
     referenceCoordinates = [sx, sy, sz]
-
     generate_structures(
         building_locations, 
         build_area.worldslice.heightmaps["MOTION_BLOCKING"],
         referenceCoordinates,
         rotation = 0
     )
+
+    # Build roads
+    build_roads(build_area.worldslice, road_map)
 
 
 
