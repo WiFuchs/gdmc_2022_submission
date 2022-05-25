@@ -7,6 +7,7 @@ and the script will ensure that the cooridinates have a solid, flat ground under
 """
 
 # Imports
+from distutils.command.build import build
 from random import randint
 
 from gdpc import geometry as GEO
@@ -14,7 +15,48 @@ from gdpc import interface as INTF
 from gdpc import toolbox as TB
 from gdpc import worldLoader as WL
 
-def build_road(WORLDSLICE, x1, z1, x2, z2, base_block):
+from helper_functions import convert_coords
+
+def build_roads(WORLDSLICE, road_map):
+    roads = []
+
+    # find roads by parsing the road_map
+    x = 0
+    z = 0
+    for z in range(road_map.shape[0]):
+        for x in range(road_map.shape[1]):
+            if road_map[(x,z)] != False:
+                roads.append((x,z))
+    
+    # Build blocks at all road points
+    for road in roads:
+        build_road(WORLDSLICE, road[0], road[1], 'oak_planks', find_road_orientation(road, road_map))
+
+
+def find_road_orientation(road, road_map):
+    this_x, this_z = road
+    
+    # Check x direction
+    if (road_map[(this_x-1, this_z)] != False if this_x > 0 else False) or (road_map[(this_x+1, this_z)] != False if this_x < len(road_map) else False):
+        return 'along_x'
+
+    # Check z direction
+    if (road_map[(this_x, this_z-1)] != False if this_z > 0 else False) or (road_map[(this_x, this_z+1)] != False if this_z < len(road_map[0]) else False):
+        return 'along_z'
+
+
+def point_valid(point, heightmap):
+    x,z = point
+    if x > heightmap.shape[0]:
+        return False
+    if z > heightmap.shape[1]:
+        return False
+    if x < 0 or z < 0:
+        return False
+    return True
+        
+
+def build_road(WORLDSLICE, x, z, base_block, direction=None):
     """
     This function will create a road from point (x1, _, z1) to (x2, _, z2). It places a block based off of
     the string passed into 'base_block', and it creates 3-length roads with the middle being the straight 
@@ -32,6 +74,36 @@ def build_road(WORLDSLICE, x1, z1, x2, z2, base_block):
     heights = WORLDSLICE.heightmaps['MOTION_BLOCKING_NO_LEAVES']
     start_x, start_z, _, _ = WORLDSLICE.rect
 
+    this_y = heights[(x, z)] 
+    global_x, global_z = convert_coords((x,z), (start_x, start_z))
+    INTF.placeBlock(global_x, this_y-1, global_z, base_block)
+
+    if direction == 'along_z':
+        if x < len(heights):
+            INTF.placeBlock(global_x+1, this_y-1, global_z, base_block)
+        if x > 0:   
+            INTF.placeBlock(global_x-1, this_y-1, global_z, base_block)
+        return
+    
+    if direction == 'along_x':
+        if z < len(heights[0]):
+            INTF.placeBlock(global_x, this_y-1, global_z+1, base_block)
+        if z > 0:   
+            INTF.placeBlock(global_x-1, this_y-1, global_z-1, base_block)
+        return
+
+    # If it is not along the x or z direction, it is diagonal. We then do a 3x3 box around it.
+    block_points = [(x-1, z-1), (x, z-1), (x+1, z-1), (x-1, z), (x+1, z), (x-1, z+1), (x, z+1), (x+1, z+1)]
+    for new_point in block_points:
+        # Ensures our point is in the boudaries
+        if point_valid(new_point, heights):
+            this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
+            INTF.placeBlock(this_global_x, this_y-1, this_global_z, base_block)
+
+
+
+
+    """
     # Road in x direction
     if z1 == z2:
         for x in range(x1, x2+1):
@@ -65,6 +137,7 @@ def build_road(WORLDSLICE, x1, z1, x2, z2, base_block):
     # Diagonal road?
     else:
         print('Diagonal road not supported (yet?)')
+    """
  
 
 
