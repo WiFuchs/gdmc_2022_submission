@@ -1,12 +1,13 @@
-class Building():
+from typing import Tuple, TYPE_CHECKING
 
-   def __init__(self, x, z, radius):
+if TYPE_CHECKING:
+    from util.encyclopedia import BuildingType
 
-       self.x = x
-       self.y = None
-       self.z = z
-       self.radius = radius
-       self.buildingType = None
-       self.buildingName = None
-       self.structure = None
-       self.orientation = None
+
+class Building:
+
+    def __init__(self, point: Tuple[int, int], building_type: 'BuildingType'):
+        self.x = point[0]
+        self.y = None
+        self.z = point[1]
+        self.building_type = building_type

@@ -6,7 +6,7 @@ import util.worldModification as worlModif
 
 # Local imports
 from village_planner import VillagePlanner, BuildArea
-
+from util.encyclopedia import BuildingType, AttractRepulse
 from prep_land import prep_land
 from build_road import build_roads
 from generate_structure import generate_structures
@@ -36,8 +36,12 @@ def driver():
     # Create build area object
     build_area = BuildArea(sx, sz, ex, ez)
 
+    # Create list of building types
+    house = BuildingType("house", [AttractRepulse(15, 80, 8)], [1], 7)
+    building_types = [house]
+
     # Create planner object and find the building seeds
-    planner = VillagePlanner(build_area)
+    planner = VillagePlanner(build_area, building_types)
 
     # Saves the building / road locations for debugging (So they don't randomly generate everytime)
     USE_HARD_CODED_BUILDINGS_AND_ROADS = False
