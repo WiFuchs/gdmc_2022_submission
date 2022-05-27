@@ -3,11 +3,13 @@ import random
 from gdpc import worldLoader
 from gdpc import geometry
 from queue import PriorityQueue
-
-from util.encyclopedia import BuildingEncyclopedia, AttractRepulse
+import typing
+from BuildingSpecifications import Building
+from util.encyclopedia import BuildingType, BuildingEncyclopedia
 from util.map import Map
 import cv2
 import numpy as np
+import csv
 
 
 class BuildArea:
@@ -32,8 +34,10 @@ class BuildArea:
 
 
 class VillagePlanner:
-    def __init__(self, build_area: BuildArea):
+    def __init__(self, build_area: BuildArea, building_types: typing.List[BuildingType], attraction_file):
         self.build_area = build_area
+
+        self.building_encyclopedia = BuildingEncyclopedia(attraction_file)
 
         # get slope using max and min elevation within kernel
         kernel = np.ones((5, 5), 'uint8')
@@ -41,35 +45,12 @@ class VillagePlanner:
         local_min_heights = cv2.erode(self.build_area.heightmap_no_trees, kernel, iterations=1)
         slope = local_max_heights - local_min_heights
 
-        # approximate slope with median blur difference
-        # median = cv2.medianBlur(self.build_area.heightmap_no_trees, 11)
-        # difference = np.array(self.build_area.heightmap_no_trees - median, dtype="uint8")
-        # self.buildable_points = np.where((difference == 0) & (self.build_area.water_mask == 1),
-        #                                  self.build_area.heightmap_no_trees, 0)
-
         self.buildable_points = np.where((slope <= 2) & (self.build_area.water_mask == 1),
                                          self.build_area.heightmap_no_trees, 0)
-        self.build_map = np.copy(self.buildable_points)  # build map is purely for displaying buildings/roads/etc
+        self.build_map = np.zeros_like(self.buildable_points, dtype="bool")
         self.road_map = np.zeros_like(self.buildable_points, dtype="bool")
-        self.building_locations = set()
-
-    def display_map(self):
-        median = cv2.medianBlur(self.build_area.heightmap_no_trees, 11)
-        difference = np.array(self.build_area.heightmap_no_trees - median, dtype="uint8")
-
-        kernel = np.ones((5, 5), 'uint8')
-        local_max_heights = cv2.dilate(self.build_area.heightmap_no_trees, kernel, iterations=1)
-        local_min_heights = cv2.erode(self.build_area.heightmap_no_trees, kernel, iterations=1)
-        slope = local_max_heights - local_min_heights
-
-        cv2.imshow('slope', slope)
-        cv2.imshow('original', self.build_area.heightmap_no_trees)
-        cv2.imshow('blurred', median)
-        cv2.imshow('difference', difference + 127)
-        cv2.imshow('water', self.build_area.water_mask * 255)
-        cv2.imshow('build points', self.build_map)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        self.building_locations: typing.List[Building] = []
+        self.building_types = building_types
 
     def check_buildable(self, point, size) -> bool:
         row_mask = np.array(
@@ -81,8 +62,8 @@ class VillagePlanner:
             return False
         return True
 
-    def add_building_to_road(self, building_x: int, building_z: int, closest_building):
-        """Add a building to the road network. Uses A*"""
+    def add_building_to_road(self, building_x: int, building_z: int):
+        """Add a building to the road network. Uses BFS where weights are the distances"""
         nodes = [[None for _ in range(self.build_area.length_x)] for _ in range(self.build_area.length_z)]
         open = PriorityQueue()
 
@@ -94,7 +75,7 @@ class VillagePlanner:
         while not open.empty():
             cur_node = open.get()
 
-            if closest_building == cur_node.pos:
+            if cur_node.pos != start_node.pos and (self.road_map[cur_node.pos] == 1 or self.build_map[cur_node.pos] == 1):
                 road = cur_node.reconstruct_path()
                 for road_pixel in road:
                     self.road_map[road_pixel] = 1
@@ -114,7 +95,7 @@ class VillagePlanner:
                         # This is the new best path to here
                         neighbor.came_from = cur_node
                         neighbor.g_score = tentative_g
-                        neighbor.f_score = tentative_g + neighbor.calc_h_score(self.build_area, closest_building)
+                        neighbor.f_score = tentative_g # + neighbor.calc_h_score(self.build_area)
                         open.put(neighbor)
 
     def seed_buildings(self, goal_buildings: int, display_map=True):
@@ -123,48 +104,52 @@ class VillagePlanner:
         This populates self.building_locations
         """
         num_buildings = 0
-        self.building_locations = set()
-        attraction_eq = AttractRepulse(min_dist=7, max_dist=100, break_even=17)
+        self.building_locations: typing.List[Building] = []
         retries = 0
-        force_buildings = True  # force the number of buildings to be exactly goal_buildings
-        while num_buildings < goal_buildings and (retries < goal_buildings * 200 or force_buildings):
+        force_buildings = False  # force the number of buildings to be goal_buildings, ok for testing, may inf loop
+        while num_buildings < goal_buildings and (retries < goal_buildings * 400 or force_buildings):
             retries += 1
             point = self.build_area.get_random_point()
             height = self.buildable_points[point]
             # if this is not a buildable point, pick a new one
-            if height == 0 or not self.check_buildable(point, 7):
+            if height == 0:
                 continue
 
-            closest_point = None
-            if self.building_locations:
-                closest_point = sorted(self.building_locations, key=lambda bp: math.dist(bp, point))[0]
-                attraction_eq.set_point_of_interest(closest_point[0], closest_point[1])
+            # Calculate the interest for each building type. Build the first one that passes the test (TODO should
+            #  this test them in order of interest?)
+            for building_type in self.building_types:
+                if not self.check_buildable(point, building_type.radius):
+                    continue
 
-            interest = attraction_eq.calculate_interest(self.build_area, point[0], point[1])
-            if interest == -1:
-                continue
-            build_probability = random.uniform(interest, 1.0)
-            if build_probability >= 0.9:
-                # add the new building
-                self.building_locations.add(point)
-                num_buildings += 1
-                retries = 0
+                interest = building_type.calc_interest(self.build_area, point, self.building_locations, self.building_encyclopedia)
+                if interest == 0:
+                    continue    # unsuitable building location
 
-                # add a road to the new building if it is not the first
-                if closest_point is not None:
-                    self.add_building_to_road(point[0], point[1], closest_point)
+                build_probability = random.uniform(interest, 1.0)
+                if build_probability >= 0.9:
+                    # add the new building
+                    self.building_locations.append(Building(point, building_type))
+                    self.build_map[point] = 1   # TODO extend this to maybe fill in the whole building plot?
+                    num_buildings += 1
+                    retries = 0
+
+                    # add a road to the new building, if there are other buildings
+                    if len(self.building_locations) > 1:
+                        self.add_building_to_road(point[0], point[1])
 
         if display_map:
-
+            new_map = np.copy(self.buildable_points)
             # mark building locations in white
-            for pt in self.building_locations:
-                self.build_map[pt] = 255
-                self.build_map = cv2.circle(self.build_map, (pt[1], pt[0]), 7, (255, 255, 255))
+            for building in self.building_locations:
+                new_map[(building.x, building.z)] = 255
+                new_map = cv2.circle(new_map, (building.z, building.x), building.building_type.radius, (255, 255, 255))
 
             # mark roads on build map
-            self.build_map = np.where(self.road_map == 1, 255, self.build_map)
-
-            cv2.imshow("build map", self.build_map)
+            new_map = np.where(self.road_map == 1, 255, new_map)
+            other_map = np.copy(self.buildable_points)
+            other_map = np.where(self.build_map == 1, 255, other_map)
+            cv2.imshow("everything map", new_map.astype(np.uint8))
+            cv2.imshow("other map", other_map.astype(np.uint8))
             cv2.waitKey(0)
             cv2.destroyAllWindows()
 

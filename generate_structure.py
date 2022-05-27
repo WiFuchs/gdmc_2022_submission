@@ -28,8 +28,9 @@ def generate_structures(building_locations, heightMap, referenceCoordinates, rot
     iu_interface = iu.Interface(buffering=True, caching = True)
     worldModifier = worlModif.WorldModification(iu_interface)
 
-    for xloc, zloc in building_locations:
-
+    for building in building_locations:
+        xloc = building.x
+        zloc = building.z
         # yCoordinate = heightMap[xloc][zloc] - 1
         # buildTower(xloc + STARTX, yCoordinate, zloc + STARTZ, height=20, radius=1)
 

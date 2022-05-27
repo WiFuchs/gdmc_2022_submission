@@ -16,6 +16,7 @@ from gdpc import geometry as GEO
 from gdpc import interface as INTF
 from gdpc import toolbox as TB
 from gdpc import worldLoader as WL
+from util.encyclopedia import BuildingType
 
 from helper_functions import convert_coords
 
@@ -88,10 +89,11 @@ def prep_land(buildings, planner):
     This function will go throguh all buildings 
     """
     for building in buildings:
-        this_x, this_z = building
+        this_x = building.x
+        this_z = building.z
         x1, z1, x2, z2 = find_radius(this_x, this_z, 5, planner.build_area.worldslice.heightmaps["MOTION_BLOCKING"])
         print(f'This building is at {this_x} x {this_z}')
-        prep_single_building(planner.build_area.worldslice, x1, z1, x2, z2, 'oak_planks', 10)
+        prep_single_building(planner.build_area.worldslice, x1, z1, x2, z2, 'oak_planks', building.building_type.radius)
 
 
 # BELOW IS USED FOR TESTING
