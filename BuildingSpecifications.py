@@ -5,7 +5,8 @@ if TYPE_CHECKING:
 
 
 class Building:
-
+    """This class represents a building at a specific point.
+    """
     def __init__(self, point: Tuple[int, int], building_type: 'BuildingType'):
         self.x = point[0]
         self.y = None

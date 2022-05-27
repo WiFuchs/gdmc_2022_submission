@@ -8,15 +8,20 @@ from BuildingSpecifications import Building
 if TYPE_CHECKING:
     from village_planner import BuildArea
 
+
 class BuildingEncyclopedia:
+    """ BuildingEncyclopedia represents the interest functions between all buildings and the terrain.
+        It is used by each BuildingType to calculate the interest value of building a building at a particular location.
+    """
     def __init__(self, attraction_file):
         self.attract_repulse = {}
         with open(attraction_file, mode='r', encoding='utf-8-sig') as attr:
             reader = csv.DictReader(attr)
             for line in reader:
-                self.attract_repulse[line["house_type"]] = {k: list(map(int, v.split(','))) for k, v in line.items() if k != "house_type"}
-            # self.attract_repulse = {line["house_type"]: line for line in reader}
-            print(self.attract_repulse)
+                self.attract_repulse[line["house_type"]] = {k: list(map(int, v.split(','))) for k, v in line.items() if
+                                                            k != "house_type"}
+        # TODO extend this with other weights / interest functions / etc
+
 
 class BuildingType:
     def __init__(self, name, radius):
@@ -25,7 +30,8 @@ class BuildingType:
         self.structure = None
         self.orientation = None
 
-    def calc_interest(self, build_area: 'BuildArea', point, building_locations: List[Building], encyclopedia: BuildingEncyclopedia) -> float:
+    def calc_interest(self, build_area: 'BuildArea', point, building_locations: List[Building],
+                      encyclopedia: BuildingEncyclopedia) -> float:
         """Calculate the interest of building at this point based on location and the world state
             :returns
                 float in the range 0-1
@@ -58,7 +64,7 @@ class BuildingType:
             if d < min_dist or d > max_dist:
                 return -1
             raw_interest = -4 * ((break_even / d) ** 12 - (break_even / d) ** 6)
-            max_interest = 2**(1/6)*break_even
+            max_interest = 2 ** (1 / 6) * break_even
             capped_interest = raw_interest / max_interest
             interest += capped_interest
 
@@ -67,4 +73,3 @@ class BuildingType:
 
 def gen_closest_distance_comparator(point):
     return lambda building: math.dist(point, (building.x, building.z))
-

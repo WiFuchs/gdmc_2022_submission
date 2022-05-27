@@ -37,6 +37,8 @@ def driver():
     build_area = BuildArea(sx, sz, ex, ez)
 
     # Create list of building types
+    # @Caveman you'll want to extend this list. Make sure that the names that you choose match the names
+    # that you fill out in data/structure_relationshipos/structure_attraction.csv
     house = BuildingType("small_house", 7)
     windmill = BuildingType("windmill", 14)
     building_types = [house, windmill]
