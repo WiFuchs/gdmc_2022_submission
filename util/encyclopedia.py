@@ -1,3 +1,4 @@
+import csv
 from abc import ABC, abstractmethod
 import math
 import numpy as np
@@ -7,68 +8,63 @@ from BuildingSpecifications import Building
 if TYPE_CHECKING:
     from village_planner import BuildArea
 
-
-class BuildingEquation(ABC):
-    @abstractmethod
-    def calculate_interest(self, build_area: 'BuildArea', building_locations: List[Building], x, z) -> float:
-        pass
-
+class BuildingEncyclopedia:
+    def __init__(self, attraction_file):
+        self.attract_repulse = {}
+        with open(attraction_file, mode='r', encoding='utf-8-sig') as attr:
+            reader = csv.DictReader(attr)
+            for line in reader:
+                self.attract_repulse[line["house_type"]] = {k: list(map(int, v.split(','))) for k, v in line.items() if k != "house_type"}
+            # self.attract_repulse = {line["house_type"]: line for line in reader}
+            print(self.attract_repulse)
 
 class BuildingType:
-    def __init__(self, name, equations: List[BuildingEquation], weights, radius):
+    def __init__(self, name, radius):
         self.name = name
-        self.equations: List[BuildingEquation] = equations
-        self.weights = np.array(weights)
         self.radius = radius
         self.structure = None
         self.orientation = None
 
-    def calc_interest(self, build_area: 'BuildArea', point, building_locations: List[Building]) -> (
-            float, Tuple[int, int]):
+    def calc_interest(self, build_area: 'BuildArea', point, building_locations: List[Building], encyclopedia: BuildingEncyclopedia) -> float:
         """Calculate the interest of building at this point based on location and the world state
             :returns
                 float in the range 0-1
         """
-        assert self.weights.sum() == 1.0  # Weights must be normalized
-        interest_vals = np.array([eq.calculate_interest(build_area, building_locations, point[0], point[1]) for eq in self.equations])
-        if -1 in interest_vals:
-            return 0, None
-        interest = np.multiply(interest_vals, self.weights).sum()
+        # TODO figure out how to weight this
+        # assert self.weights.sum() == 1.0  # Weights must be normalized
+
+        # calculate inter-building attraction
+        interest = self._attract_repulse(encyclopedia, building_locations, point[0], point[1])
+        if interest == -1:
+            return 0
+
+        # interest = np.multiply(interest_vals, self.weights).sum()
         assert interest <= 1.0
-        if building_locations:
-            return interest, (building_locations[-1].x, building_locations[-1].z)
-        return interest, None
+        return interest
 
-
-def gen_closest_distance_comparator(point):
-    return lambda building: math.dist(point, (building.x, building.z))
-
-
-class AttractRepulse(BuildingEquation):
-    """Lennard-Jones Potential function that repels at close distances and attracts at larger distances.
-        Break_even is the distance where the function switches from repelling to attracting
-    """
-
-    def __init__(self, min_dist: int, max_dist: int, break_even: int):
-        self.min_dist = min_dist
-        self.max_dist = max_dist
-        self.break_even = break_even
-
-    def calculate_interest(self, build_area: 'BuildArea', building_locations: List[Building], x, z):
-        """Use an attraction-repulsion function to calculate the interest of building at this point"""
+    def _attract_repulse(self, encyclopedia: BuildingEncyclopedia, building_locations: List[Building], x, z):
+        """Lennard-Jones Potential function that repels at close distances and attracts at larger distances.
+            Break_even is the distance where the function switches from repelling to attracting
+        """
         if not building_locations:
             return 0.5
 
         interest = 0
         # loop over all buildings and calculate interest from them
         for building in building_locations:
+            min_dist, max_dist, break_even = encyclopedia.attract_repulse[self.name][building.building_type.name]
             d = math.dist((building.x, building.z), (x, z))
             # if the distance to any house is out of bounds, this is not a suitable building location
-            if d < self.min_dist or d > self.max_dist:
+            if d < min_dist or d > max_dist:
                 return -1
-            raw_interest = -4 * ((self.break_even / d) ** 12 - (self.break_even / d) ** 6)
-            max_interest = 2**(1/6)*self.break_even
+            raw_interest = -4 * ((break_even / d) ** 12 - (break_even / d) ** 6)
+            max_interest = 2**(1/6)*break_even
             capped_interest = raw_interest / max_interest
             interest += capped_interest
 
         return interest / len(building_locations)
+
+
+def gen_closest_distance_comparator(point):
+    return lambda building: math.dist(point, (building.x, building.z))
+

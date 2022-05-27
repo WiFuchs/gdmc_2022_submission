@@ -6,11 +6,12 @@ import util.worldModification as worlModif
 
 # Local imports
 from village_planner import VillagePlanner, BuildArea
-from util.encyclopedia import BuildingType, AttractRepulse
+from util.encyclopedia import BuildingType
 from prep_land import prep_land
 from build_road import build_roads
 from generate_structure import generate_structures
 from helper_functions import *
+
 
 def driver():
     """
@@ -32,26 +33,25 @@ def driver():
     if VISUALIZE_BUILD_AREA:
         build_perimeter_around_BA((sx, sy, sz), (ex, ey, ez))
 
-    
     # Create build area object
     build_area = BuildArea(sx, sz, ex, ez)
 
     # Create list of building types
-    house = BuildingType("house", [AttractRepulse(15, 80, 8)], [1], 7)
-    building_types = [house]
+    house = BuildingType("small_house", 7)
+    windmill = BuildingType("windmill", 14)
+    building_types = [house, windmill]
 
     # Create planner object and find the building seeds
-    planner = VillagePlanner(build_area, building_types)
+    planner = VillagePlanner(build_area, building_types, "data/structure_relationships/structure_attraction.csv")
 
     # Saves the building / road locations for debugging (So they don't randomly generate everytime)
     USE_HARD_CODED_BUILDINGS_AND_ROADS = False
     if USE_HARD_CODED_BUILDINGS_AND_ROADS:
         building_locations, road_map = hard_code_buildings_and_roads(planner, False)
-    else:    
+    else:
         planner.seed_buildings(goal_buildings=24)
         building_locations = planner.building_locations
         road_map = planner.road_map
-    
 
     # For all buildings, prep the land and build a base
     prep_land(building_locations, planner)
@@ -59,21 +59,14 @@ def driver():
     # Build structures at all building seeds
     referenceCoordinates = [sx, sy, sz]
     generate_structures(
-        building_locations, 
+        building_locations,
         build_area.worldslice.heightmaps["MOTION_BLOCKING"],
         referenceCoordinates,
-        rotation = 0
+        rotation=0
     )
 
     # Build roads
     build_roads(build_area.worldslice, road_map)
-
-
-
-
-
-    
-    
 
 
 if __name__ == '__main__':

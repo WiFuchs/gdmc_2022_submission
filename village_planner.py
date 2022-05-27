@@ -5,10 +5,11 @@ from gdpc import geometry
 from queue import PriorityQueue
 import typing
 from BuildingSpecifications import Building
-from util.encyclopedia import BuildingType, AttractRepulse
+from util.encyclopedia import BuildingType, BuildingEncyclopedia
 from util.map import Map
 import cv2
 import numpy as np
+import csv
 
 
 class BuildArea:
@@ -33,8 +34,10 @@ class BuildArea:
 
 
 class VillagePlanner:
-    def __init__(self, build_area: BuildArea, building_types: typing.List[BuildingType]):
+    def __init__(self, build_area: BuildArea, building_types: typing.List[BuildingType], attraction_file):
         self.build_area = build_area
+
+        self.building_encyclopedia = BuildingEncyclopedia(attraction_file)
 
         # get slope using max and min elevation within kernel
         kernel = np.ones((5, 5), 'uint8')
@@ -118,7 +121,7 @@ class VillagePlanner:
                 if not self.check_buildable(point, building_type.radius):
                     continue
 
-                interest, connection_point = building_type.calc_interest(self.build_area, point, self.building_locations)
+                interest = building_type.calc_interest(self.build_area, point, self.building_locations, self.building_encyclopedia)
                 if interest == 0:
                     continue    # unsuitable building location
 
@@ -130,8 +133,8 @@ class VillagePlanner:
                     num_buildings += 1
                     retries = 0
 
-                    # add a road to the new building if it is not the first
-                    if connection_point is not None:
+                    # add a road to the new building, if there are other buildings
+                    if len(self.building_locations) > 1:
                         self.add_building_to_road(point[0], point[1])
 
         if display_map:
