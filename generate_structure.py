@@ -17,7 +17,7 @@ import util.worldModification as worlModif
 import json
 from util.map import Map
 
-def generate_structures(building_locations, heightMap, referenceCoordinates):
+def generate_structures(building_locations, referenceCoordinates):
     """
     Builds a building at all building locations using building specifications
 
@@ -38,11 +38,11 @@ def generate_structures(building_locations, heightMap, referenceCoordinates):
 
     # Build structure at every building location using building specs
     for building in building_locations:
-        buildStructure(building, heightMap, referenceCoordinates, structures, biomesBlocks, worldModifier)
+        buildStructure(building, referenceCoordinates, structures, biomesBlocks, worldModifier)
 
 
 
-def buildStructure(building, heightMap, referenceCoordinates, structures, biomesBlocks, worlModif):
+def buildStructure(building, referenceCoordinates, structures, biomesBlocks, worlModif):
     """
     Builds an individual building based off building type
 
@@ -63,8 +63,7 @@ def buildStructure(building, heightMap, referenceCoordinates, structures, biomes
     struct, size = structures[buildingTypeName][chosenStruct]
     xCoordinate = building.x - ((size[0]-2)//2) - 1
     zCoordinate = building.z - ((size[2]-2)//2) - 1
-    yCoordinate = (heightMap[xCoordinate][zCoordinate] - 1)
-    # yCoordinate = building.y
+    yCoordinate = building.y
 
 
 

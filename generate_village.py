@@ -72,7 +72,6 @@ def driver():
     referenceCoordinates = [sx, sy, sz]
     generate_structures(
         building_locations,
-        build_area.worldslice.heightmaps["MOTION_BLOCKING"],
         referenceCoordinates
     )
 
