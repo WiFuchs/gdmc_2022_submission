@@ -1,0 +1,41 @@
+Building Types
+
+haybale 
+    -Close to: farms and misc
+    -Far from: large houses and townhall
+
+farms 
+    -Close to: haybale, windmills, misc
+    -Far from: large houses and townhall
+
+small_house 
+    -Close to: houses, townhall, misc
+    -Far from: 
+
+medium_house
+    -Close to: houses, townhall, tavern
+    -Far from: farms, misc
+
+townhall
+    -Close to: everything
+    -Far from: cemetary
+
+misc
+    -Close to: haybales, farms
+    -Far from: townhall, medium houses
+
+windmill
+    -Close to: haybales, misc, farms
+    -Far from: townhall, houses
+
+cemetary
+    -Close to:
+    -Far from: everything
+
+tavern
+    -Close to: townhall, houses
+    -Far from: misc, farms
+
+adventure
+    -Close to:
+    -Far from: everything

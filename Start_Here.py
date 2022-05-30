@@ -146,6 +146,39 @@ def buildStructure(x, z, radius, heightMap, referenceCoordinates, rotation, stru
 
 
 
+def buildAllStructure(x, z, heightMap, referenceCoordinates, structures, biomesBlocks, worlModif):
+
+    rotation = 0
+
+    for key in structures.keys():
+        struct, size = structures[key]
+
+        xCoordinate = x + ((size[0]-2)//2) - 1
+        zCoordinate = z + ((size[2]-2)//2) - 1
+        # yCoordinate = (heightMap[xCoordinate][zCoordinate] - 1)
+
+        yCoordinate = 2
+
+
+
+        print("Building " + key + " @ coordinates", xCoordinate, yCoordinate, zCoordinate)
+
+        ## get biome 
+        # biomeID = util.getNameBiome(util.getBiome(xCoordinate, zCoordinate, 10, 10))
+        biomeID = util.getNameBiome(util.getBiome(referenceCoordinates[0] + xCoordinate, referenceCoordinates[2]  + zCoordinate, 10, 10))
+
+        if str(biomeID) not in biomesBlocks:
+            replacementBiomeBlocks = biomesBlocks["0"]
+        else:
+            replacementBiomeBlocks = biomesBlocks[str(biomeID)]
+
+        
+
+
+        struct.build([xCoordinate, -yCoordinate, zCoordinate], referenceCoordinates, rotation, worlModif, replacementBiomeBlocks)
+
+        x += 10
+
 
 
 
@@ -195,10 +228,10 @@ if __name__ == '__main__':
 
         yCoordinate = heightMap[xloc][zloc] - 1
 
-        buildTower(xloc + STARTX, yCoordinate, zloc + STARTZ, height=20, radius=1)
+        # buildTower(xloc + STARTX, yCoordinate, zloc + STARTZ, height=20, radius=1)
 
         
-        buildStructure(xloc, zloc, radius, heightMap, referenceCoordinates, rotation, structures, biomesBlocks, worlModif)
+        buildAllStructure(xloc, zloc, heightMap, referenceCoordinates, structures, biomesBlocks, worlModif)
 
         print("Done!")
     except KeyboardInterrupt:   # useful for aborting a run-away program
