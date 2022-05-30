@@ -11,4 +11,5 @@ class Building:
         self.x = point[0]
         self.y = None
         self.z = point[1]
+        self.rotation = 0
         self.building_type = building_type

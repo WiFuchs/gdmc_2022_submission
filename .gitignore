@@ -2,3 +2,5 @@
 Pipfile.lock
 venv
 __pycache__
+lib/__pycache__
+util/__pycache__

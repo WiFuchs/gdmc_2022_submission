@@ -39,9 +39,18 @@ def driver():
     # Create list of building types
     # @Caveman you'll want to extend this list. Make sure that the names that you choose match the names
     # that you fill out in data/structure_relationshipos/structure_attraction.csv
-    house = BuildingType("small_house", 7)
-    windmill = BuildingType("windmill", 14)
-    building_types = [house, windmill]
+    hayBale =  BuildingType("haybale", 8)
+    farm =  BuildingType("farm", 13)
+    small_house =  BuildingType("small_house", 10)
+    medium_house =  BuildingType("medium_house", 15)
+    townhall =  BuildingType("townhall", 20)
+    windmill =  BuildingType("windmill", 28)
+    cemetary =  BuildingType("graveyard", 24)
+    tavern =  BuildingType("tavern", 11)
+    adventure =  BuildingType("enforcement", 15)
+    misc =  BuildingType("misc", 10)
+
+    building_types = [hayBale, farm, small_house, medium_house, townhall, windmill, cemetary, tavern, adventure, misc]
 
     # Create planner object and find the building seeds
     planner = VillagePlanner(build_area, building_types, "data/structure_relationships/structure_attraction.csv")
@@ -51,9 +60,10 @@ def driver():
     if USE_HARD_CODED_BUILDINGS_AND_ROADS:
         building_locations, road_map = hard_code_buildings_and_roads(planner, False)
     else:
-        planner.seed_buildings(goal_buildings=24)
+        planner.seed_buildings(goal_buildings=40)
         building_locations = planner.building_locations
         road_map = planner.road_map
+
 
     # For all buildings, prep the land and build a base
     prep_land(building_locations, planner)
@@ -63,8 +73,7 @@ def driver():
     generate_structures(
         building_locations,
         build_area.worldslice.heightmaps["MOTION_BLOCKING"],
-        referenceCoordinates,
-        rotation=0
+        referenceCoordinates
     )
 
     # Build roads
