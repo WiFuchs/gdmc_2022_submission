@@ -76,7 +76,10 @@ def driver():
     )
 
     # Build roads
-    build_roads(build_area.worldslice, road_map)
+    lamp_locations = build_roads(build_area.worldslice, road_map)
+
+    # @Miko: The above lamp_locations should have all the global coordinates of where to put lamps. They should be in (x,y,z) form.
+
 
 
 if __name__ == '__main__':

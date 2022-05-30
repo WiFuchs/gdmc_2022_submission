@@ -28,10 +28,20 @@ def build_roads(WORLDSLICE, road_map):
             if road_map[(x,z)] != False:
                 roads.append((x,z))
     
+    # Bookkeeping for lamp index
+    lamps = []
+    BUILD_LAMP_EVERY = 40
+    this_lamp_ind = BUILD_LAMP_EVERY
+
     # Build blocks at all road points
     for road in roads:
-        build_road(WORLDSLICE, road[0], road[1], 'oak_planks', find_road_orientation(road, road_map))
+        this_lamp_ind = this_lamp_ind - 1
+        this_lamp_ind = (this_lamp_ind if this_lamp_ind >= 0 else BUILD_LAMP_EVERY)
+        this_lamp_location = build_road(WORLDSLICE, road[0], road[1], 'oak_planks', (this_lamp_ind == 0), find_road_orientation(road, road_map)) 
+        if this_lamp_location != None:
+            lamps.append(this_lamp_location)
 
+    return lamps
 
 def find_road_orientation(road, road_map):
     this_x, this_z = road
@@ -56,7 +66,7 @@ def point_valid(point, heightmap):
     return True
         
 
-def build_road(WORLDSLICE, x, z, base_block, direction=None):
+def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
     """
     This function will create a road from point (x1, _, z1) to (x2, _, z2). It places a block based off of
     the string passed into 'base_block', and it creates 3-length roads with the middle being the straight 
@@ -83,14 +93,18 @@ def build_road(WORLDSLICE, x, z, base_block, direction=None):
             INTF.placeBlock(global_x+1, this_y-1, global_z, base_block)
         if x > 0:   
             INTF.placeBlock(global_x-1, this_y-1, global_z, base_block)
-        return
+            if build_lamp:
+                return (global_x-1, this_y-1, global_z)
+        return None
     
     if direction == 'along_x':
         if z < len(heights[0]):
             INTF.placeBlock(global_x, this_y-1, global_z+1, base_block)
         if z > 0:   
             INTF.placeBlock(global_x-1, this_y-1, global_z-1, base_block)
-        return
+            if build_lamp:
+                return (global_x-1, this_y-1, global_z)
+        return None
 
     # If it is not along the x or z direction, it is diagonal. We then do a 3x3 box around it.
     block_points = [(x-1, z-1), (x, z-1), (x+1, z-1), (x-1, z), (x+1, z), (x-1, z+1), (x, z+1), (x+1, z+1)]
@@ -99,6 +113,10 @@ def build_road(WORLDSLICE, x, z, base_block, direction=None):
         if point_valid(new_point, heights):
             this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
             INTF.placeBlock(this_global_x, this_y-1, this_global_z, base_block)
+    if build_lamp and point_valid(block_points[0], heights):
+        lamp_x, lamp_z = convert_coords(block_points[0], (start_x, start_z))
+        return (lamp_x, this_y-1, lamp_z)
+    return None
 
 
 
