@@ -83,6 +83,9 @@ def prep_single_building(WORLDSLICE, x1, z1, x2, z2, base_block, height):
     global_end = convert_coords((x2, z2), (start_x, start_z))
     GEO.placeCuboid(global_start[0], desired_y+1, global_start[1], global_end[0], desired_y+height, global_end[1], 'air') 
 
+    # Return our desired Y height
+    return desired_y
+
 
 def prep_land(buildings, planner):
     """
@@ -93,7 +96,8 @@ def prep_land(buildings, planner):
         this_z = building.z
         x1, z1, x2, z2 = find_radius(this_x, this_z, 5, planner.build_area.worldslice.heightmaps["MOTION_BLOCKING"])
         print(f'This building is at {this_x} x {this_z}')
-        prep_single_building(planner.build_area.worldslice, x1, z1, x2, z2, 'oak_planks', building.building_type.radius)
+        desired_y = prep_single_building(planner.build_area.worldslice, x1, z1, x2, z2, 'oak_planks', building.building_type.radius)
+        building.y = desired_y
 
 
 # BELOW IS USED FOR TESTING
