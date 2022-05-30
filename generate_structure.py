@@ -19,7 +19,7 @@ from util.map import Map
 
 def generate_structures(building_locations, heightMap, referenceCoordinates):
     """
-    Builds a building at all building locations using local materials
+    Builds a building at all building locations using building specifications
 
     :param building_locations: List of building specs
     :param heightMap: Grid map of heights in Building Area   

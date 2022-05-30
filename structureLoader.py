@@ -8,9 +8,23 @@ STRUCTURE_PATH = "data/structures/"
 
 
 def loadAllResources() : 
+    """
+    Loads all structures from .nbt files
+
+    :returns dictionary containing all structures organized by building type 
+    """
+
     # Loads structures
 
     def loadStructures(path, infoPath, name, buildingType):
+        """
+        Loads a structure from an .nbt file and instanties structure object
+
+        :param path: Path to .nbt file
+        :param infoPath: Path to .json file corresponding to the .nbt file
+        :param name: Name of the structure
+        :param buildingType: Building type of the structure
+        """
         nbtfile = nbt.NBTFile(STRUCTURE_PATH + path,'rb')
         with open(STRUCTURE_PATH + infoPath) as json_file:
            info = json.load(json_file)
@@ -77,31 +91,6 @@ def loadAllResources() :
     loadStructures("representatives/jail/basicjail.nbt", "representatives/jail/basicjail.json", "basicjail", 'enforcement')
     loadStructures("representatives/barrack/basicbarrack.nbt", "representatives/barrack/basicbarrack.json", "basicbarrack", 'enforcement')
 
-    # addGeneratedStructures(GeneratedQuarry(), "functionals/quarry/basicgeneratedquarry.json", "basicgeneratedquarry")
-    # addGeneratedStructures(GeneratedWell(), "representatives/well/basicgeneratedwell.json", "basicgeneratedwell")
-
-
-    # loadStructures("decorations/murderercache.nbt", "decorations/murderercache.json", "murderercache")
-
-    # Load lootTable
-    # loadLootTable("houses/kitchenhouse.json", "kitchenhouse")
-    # loadLootTable("houses/bedroomhouse.json", "bedroomhouse")
-
-    # loadLootTable("functionals/windmill.json", "windmill")
-    # loadLootTable("functionals/basiclumberjachut.json", "basiclumberjachut")
-    # loadLootTable("functionals/basicfarm.json", "basicfarm")
-    # loadLootTable("functionals/basicstonecutter.json", "basicstonecutter")
-    # loadLootTable("functionals/smeltery.json", "smeltery")
-    # loadLootTable("functionals/workshop.json", "workshop")
-
-    # loadLootTable("representatives/townhall.json", "townhall")
-    # loadLootTable("representatives/jail.json", "jail")
-    # loadLootTable("representatives/tavern.json", "tavern")
-    # loadLootTable("representatives/barrack.json", "barrack")
-
-    # loadLootTable("representatives/adventurerhouse.json", "adventurerhouse")
-
-    # loadLootTable("decorations/murderercache.json", "murderercache")
 
     print("End load ressources")
 
