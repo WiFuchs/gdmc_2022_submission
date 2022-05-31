@@ -36,6 +36,6 @@ tavern
     -Close to: townhall, houses
     -Far from: misc, farms
 
-adventure
+enforcement
     -Close to:
     -Far from: everything
