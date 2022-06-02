@@ -22,10 +22,13 @@ def getBiome(x, z, dx, dz):
         return -1
         #return "minecraft:plains"
     biomeId = response.text.split(":")
-
-    biomeinfo = biomeId[6].split(";")
-    biome = biomeinfo[1].split(",")
-
+    
+    try: 
+        biomeinfo = biomeId[6].split(";")
+        biome = biomeinfo[1].split(",")          
+    except:
+        return 1
+    
     return biome[0]
     
 def getAllBiome():
