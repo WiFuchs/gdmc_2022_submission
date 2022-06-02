@@ -13,9 +13,10 @@ import util.util as util
 import structureLoader as loader
 import lib.interfaceUtils as iu
 import util.worldModification as worlModif
-
 import json
 from util.map import Map
+
+from place_villagers import place_villagers
 
 def generate_structures(building_locations, referenceCoordinates):
     """
@@ -80,4 +81,7 @@ def buildStructure(building, referenceCoordinates, structures, biomesBlocks, wor
     
     # Build structure
     struct.build([-xCoordinate, -yCoordinate, -zCoordinate], referenceCoordinates, building.rotation, worlModif, replacementBiomeBlocks)
+
+    # Place villagers
+    place_villagers(struct, referenceCoordinates[0] + xCoordinate, yCoordinate+20, referenceCoordinates[2] + zCoordinate)
    
