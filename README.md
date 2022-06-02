@@ -14,20 +14,20 @@ GDMC 2022 submission, csc 570, Cal Poly SLO
 * [GDMC http interface]
 
 ## Components
-1. Generate building locations in an environment
-2. Deduce where distinct building types should be placed
-3. Build structures at building locations
-4. Connect village together with roads, bridges and tunnels
+* 1\. Generate building locations in an environment
+* 2\. Deduce where distinct building types should be placed
+* 3\. Build structures at building locations
+* 4\. Connect village together with roads, bridges and tunnels
 
 
 ## Run Village Generation Script
 
-1. Install dependencies
-    a. pip install -r requirements.txt
-2. Open minecraft launcher
-3. Ensure http interface @ http://localhost:9000/ is available
-4. Run python script
-    a. python generate_village.py
+* 1\. Install dependencies
+    * a\. pip install -r requirements.txt
+* 2\. Open minecraft launcher
+* 3\. Ensure http interface @ http://localhost:9000/ is available
+* 4\. Run python script
+    * a\. python generate_village.py
 
 
 ## Attrubtion
