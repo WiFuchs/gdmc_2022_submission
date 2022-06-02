@@ -1,9 +1,10 @@
-# gdmc_2022_submission
-GDMC 2022 submission, csc 570, Cal Poly SLO
+# GDMC 2022 submission, CSC 570, Cal Poly SLO
 
+Work done by WiFuchs, keonroohparvar, KamenShah, mlkrajewski
 
 ## Introduction
- The goal of this project is to explore new algorithms in the lens of settlement creation in Minecraft, which entails designing an algorithm that can generate a lifelike settlement within a Minecraft map. We chose Minecraft since it offers one of the best sandbox environments to explore PCG within a game. Furthermore, there are several competitions that score PCG algorithms in Minecraft, providing us with metrics that can be used to evaluate how well the algorithm performs. Our goal is to implement an algorithm that can adapt to a certain landscape and produce a village that closely resembles something to real life. We plan to achieve this by studying previous implementations and build upon notable shortcomings like designing road connections and a practical village layout.
+ The goal of this project is to explore new algorithms in the lens of settlement creation in Minecraft. This implementation focuses on structure placement, location of distinct building types and village connection mechanisms. Our goal was to improve upon previous works and furthermore achieve village layouts that are analogous to what could be seen in the world. While this work is domain specific to Minecraft, the frame of logic used in settlement creation may help improve procedural content generation used in other games. 
+
  
 ## Requirement
 * python == 3.6
@@ -32,10 +33,6 @@ GDMC 2022 submission, csc 570, Cal Poly SLO
 
 ## Attrubtion
 Components are inspired by project [GDMC2021Tsukuba] . Thanks MightyCode, Harckyl, YusufSenel for your hard work!
-
-## Citation
-
-## Contacts
 
 
 
