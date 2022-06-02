@@ -14,6 +14,7 @@ from gdpc import geometry as GEO
 from gdpc import interface as INTF
 from gdpc import toolbox as TB
 from gdpc import worldLoader as WL
+from numpy import place
 
 from helper_functions import convert_coords
 
@@ -64,6 +65,10 @@ def point_valid(point, heightmap):
     if x < 0 or z < 0:
         return False
     return True
+
+def place_road(x,y,z,height,base_block):
+    INTF.placeBlock(x, y, z, base_block)
+    GEO.placeCuboid(x,y,z,x,y+height,z,'air')
         
 
 def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
@@ -86,24 +91,24 @@ def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
 
     this_y = heights[(x, z)] 
     global_x, global_z = convert_coords((x,z), (start_x, start_z))
-    INTF.placeBlock(global_x, this_y-1, global_z, base_block)
+    place_road(global_x, this_y-1, global_z, base_block, 5)
 
     if direction == 'along_z':
         if x < len(heights):
-            INTF.placeBlock(global_x+1, this_y-1, global_z, base_block)
+            place_road(global_x+1, this_y-1, global_z, base_block, 5)
         if x > 0:   
-            INTF.placeBlock(global_x-1, this_y-1, global_z, base_block)
+            place_road(global_x-1, this_y-1, global_z, base_block, 5)
             if build_lamp:
                 return (global_x-1, this_y-1, global_z)
         return None
     
     if direction == 'along_x':
         if z < len(heights[0]):
-            INTF.placeBlock(global_x, this_y-1, global_z+1, base_block)
+            place_road(global_x, this_y-1, global_z+1, base_block, 5)
         if z > 0:   
-            INTF.placeBlock(global_x-1, this_y-1, global_z-1, base_block)
+            place_road(global_x, this_y-1, global_z-1, base_block, 5)
             if build_lamp:
-                return (global_x-1, this_y-1, global_z)
+                return (global_x, this_y-1, global_z-1)
         return None
 
     # If it is not along the x or z direction, it is diagonal. We then do a 3x3 box around it.
@@ -113,6 +118,7 @@ def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
         if point_valid(new_point, heights):
             this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
             INTF.placeBlock(this_global_x, this_y-1, this_global_z, base_block)
+            place_road(this_global_x, this_y-1, this_global_z, base_block, 5)
     if build_lamp and point_valid(block_points[0], heights):
         lamp_x, lamp_z = convert_coords(block_points[0], (start_x, start_z))
         return (lamp_x, this_y-1, lamp_z)
