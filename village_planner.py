@@ -51,6 +51,7 @@ class VillagePlanner:
         self.road_map = np.zeros_like(self.buildable_points, dtype="bool")
         self.building_locations: typing.List[Building] = []
         self.building_types = building_types
+        self.bridges = []       # list of (x,y,z) points on bridges
 
     def check_buildable(self, point, size) -> bool:
         row_mask = np.array(
@@ -66,7 +67,7 @@ class VillagePlanner:
         """Add a building to the road network. Uses BFS where weights are the distances"""
         nodes = [[None for _ in range(self.build_area.length_x)] for _ in range(self.build_area.length_z)]
         open = PriorityQueue()
-
+        bridge_radius = 20
         start_node = PathNode(building_x, building_z)
         start_node.g_score = 0
         nodes[building_x][building_z] = start_node
@@ -75,13 +76,30 @@ class VillagePlanner:
         while not open.empty():
             cur_node = open.get()
 
-            if cur_node.pos != start_node.pos and (self.road_map[cur_node.pos] == 1 or self.build_map[cur_node.pos] == 1):
-                road = cur_node.reconstruct_path()
-                for road_pixel in road:
+            if cur_node.pos != start_node.pos and (
+                    self.road_map[cur_node.pos] == 1 or self.build_map[cur_node.pos] == 1):
+                roads = cur_node.reconstruct_path()
+                bridges = cur_node.reconstruct_bridges()
+                for road_pixel in roads:
                     self.road_map[road_pixel] = 1
+                for bridge_start, bridge_end in bridges:
+                    direction = "z" if bridge_start[0] == bridge_end[0] else "x"
+                    height = self.build_area.heightmap_no_trees[bridge_start]
+                    if direction == "z":
+                        start_z = min(bridge_start[1], bridge_end[1])
+                        end_z = max(bridge_start[1], bridge_end[1])
+                        bridge_points = [(bridge_start[0], height, z) for z in range(start_z, end_z + 1)]
+                    else:
+                        start_x = min(bridge_start[0], bridge_end[0])
+                        end_x = max(bridge_start[0], bridge_end[0])
+                        bridge_points = [(x, height, bridge_start[1]) for x in range(start_x, end_x + 1)]
+
+                    self.bridges.append((bridge_points, direction))
                 return
 
-            # check neighbors in all possible directions
+            need_bridges = False
+
+            # check neighbors in all possible directions for surface roads
             for x_off, z_off, cost in [(-1, -1, 1.4), (-1, 1, 1.4), (1, -1, 1.4), (1, 1, 1.4), (1, 0, 1), (-1, 0, 1),
                                        (0, 1, 1), (0, -1, 1)]:
                 # make sure that we are staying within the build area
@@ -89,14 +107,50 @@ class VillagePlanner:
                     if nodes[cur_node.x + x_off][cur_node.z + z_off] is None:
                         nodes[cur_node.x + x_off][cur_node.z + z_off] = PathNode(cur_node.x + x_off, cur_node.z + z_off)
                     neighbor = nodes[cur_node.x + x_off][cur_node.z + z_off]
-                    tentative_g = cur_node.g_score + cur_node.get_slope_cost(self.build_area, self.road_map, neighbor)
+                    slope_cost = cur_node.get_slope_cost(self.build_area, self.road_map,
+                                                         neighbor)
+                    tentative_g = cur_node.g_score + cost * slope_cost
 
+                    if slope_cost == np.inf:
+                        need_bridges = True
+
+                    # TODO do we really need the f score anymore? We aren't calculating a h score so f == g
                     if tentative_g < neighbor.g_score:
                         # This is the new best path to here
                         neighbor.came_from = cur_node
                         neighbor.g_score = tentative_g
-                        neighbor.f_score = tentative_g # + neighbor.calc_h_score(self.build_area)
+                        neighbor.f_score = tentative_g  # + neighbor.calc_h_score(self.build_area)
+                        neighbor.type = "flat"
                         open.put(neighbor)
+
+            # check bridges of length 3 to bridge_radius
+            if need_bridges:
+                start_height = self.build_area.heightmap_no_trees[cur_node.pos]
+                for r in range(3, bridge_radius, 3):
+                    for dir in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+                        x_off = dir[0] * r
+                        z_off = dir[1] * r
+                        if 0 < cur_node.x + x_off < self.build_area.length_x - 1 and 0 < cur_node.z + z_off < self.build_area.length_z - 1:
+                            # can only build a bridge if the start and end heights are the same (or similar???)
+                            end_x = cur_node.x + x_off
+                            end_z = cur_node.z + z_off
+                            delta_h = start_height - self.build_area.heightmap_no_trees[end_x, end_z]
+                            on_land = self.build_area.water_mask[end_x, end_z] == 1
+                            if delta_h != 0 or not on_land:
+                                continue
+
+                            if nodes[cur_node.x + x_off][cur_node.z + z_off] is None:
+                                nodes[cur_node.x + x_off][cur_node.z + z_off] = PathNode(cur_node.x + x_off,
+                                                                                         cur_node.z + z_off)
+                            end_node = nodes[cur_node.x + x_off][cur_node.z + z_off]
+                            tentative_g = cur_node.g_score + cur_node.get_bridge_cost(self.build_area, dir, end_node)
+                            if tentative_g < end_node.g_score:
+                                # This is the new best path to here
+                                end_node.came_from = cur_node
+                                end_node.g_score = tentative_g
+                                end_node.f_score = tentative_g
+                                end_node.type = "bridge"
+                                open.put(end_node)
 
     def seed_buildings(self, goal_buildings: int, display_map=True):
         """
@@ -121,15 +175,16 @@ class VillagePlanner:
                 if not self.check_buildable(point, building_type.radius):
                     continue
 
-                interest = building_type.calc_interest(self.build_area, point, self.building_locations, self.building_encyclopedia)
+                interest = building_type.calc_interest(self.build_area, point, self.building_locations,
+                                                       self.building_encyclopedia)
                 if interest == 0:
-                    continue    # unsuitable building location
+                    continue  # unsuitable building location
 
                 build_probability = random.uniform(interest, 1.0)
                 if build_probability >= 0.9:
                     # add the new building
                     self.building_locations.append(Building(point, building_type))
-                    self.build_map[point] = 1   # TODO extend this to maybe fill in the whole building plot?
+                    self.build_map[point] = 1  # TODO extend this to maybe fill in the whole building plot?
                     num_buildings += 1
                     retries = 0
 
@@ -146,12 +201,19 @@ class VillagePlanner:
 
             # mark roads on build map
             new_map = np.where(self.road_map == 1, 255, new_map)
-            other_map = np.copy(self.buildable_points)
-            other_map = np.where(self.build_map == 1, 255, other_map)
+
+            bridges_map = np.copy(self.buildable_points)
+            for bridge_points, direction in self.bridges:
+                for x, y, z in bridge_points:
+                    bridges_map[(x, z)] = 255
+
+            cv2.imshow("bridges_map", bridges_map.astype(np.uint8))
             cv2.imshow("everything map", new_map.astype(np.uint8))
-            cv2.imshow("other map", other_map.astype(np.uint8))
             cv2.waitKey(0)
             cv2.destroyAllWindows()
+
+
+bridge_count = 0
 
 
 class PathNode:
@@ -161,37 +223,74 @@ class PathNode:
         self.f_score = np.inf
         self.g_score = np.inf
         self.came_from = None
+        self.type = None
 
     def __lt__(self, other: 'PathNode'):
         return self.f_score < other.f_score
 
-    def calc_h_score(self, build_area: BuildArea, goal):
-        D = 1  # Cost of moving to an adjacent grid square
-        D2 = 1.4  # Cost of moving diagonally
-        dx = abs(self.x - goal[0])
-        dy = abs(self.z - goal[1])
-        distance = D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
-
-        # TODO how do I account for slope, water crossings, etc?
-        return distance
+    # def calc_h_score(self, build_area: BuildArea, goal):
+    #     D = 1  # Cost of moving to an adjacent grid square
+    #     D2 = 1.4  # Cost of moving diagonally
+    #     dx = abs(self.x - goal[0])
+    #     dy = abs(self.z - goal[1])
+    #     distance = D * (dx + dy) + (D2 - 2 * D) * min(dx, dy)
+    #
+    #     # TODO how do I account for slope, water crossings, etc?
+    #     return distance
 
     @property
     def pos(self):
         return self.x, self.z
+
+    def reconstruct_bridges(self):
+        assert self.pos is not None
+        if self.came_from is not None:
+            bridges = self.came_from.reconstruct_bridges()
+            if self.type == "bridge":
+                bridges.append((self.pos, self.came_from.pos))
+            return bridges
+        return []
 
     def reconstruct_path(self):
         assert self.pos is not None
         if self.came_from is not None:
             path = self.came_from.reconstruct_path()
             path.append(self.pos)
+            if self.type == "bridge":
+                global bridge_count
+                bridge_count += 1
+                print(f"adding bridge {bridge_count} - {self.pos}")
             return path
         return [self.pos]
 
     def get_slope_cost(self, build_area: BuildArea, road_map, other):
         """Get cost of moving to an adjacent block. Steepness is penalized, road re-use is rewarded"""
         steepness = abs(int(build_area.heightmap_no_trees[self.pos]) - int(build_area.heightmap_no_trees[other.pos]))
-        steepness = steepness ** steepness
+        cost = steepness + 1
+        # if the grade is not traversable, we can't build a surface road. Need bridge or tunnel
+        if steepness >= 2 or not build_area.water_mask[other.pos]:
+            cost = np.inf
+
         road_exists = road_map[self.pos]
         if road_exists:
-            steepness = 0
-        return steepness
+            cost = 0
+        return cost
+
+    def get_bridge_cost(self, build_area: BuildArea, dir, other):
+        """Get cost of building a bridge directly to this node """
+        cost = 0
+        cur_x = self.x + dir[0]
+        cur_z = self.z + dir[1]
+        height = build_area.heightmap_no_trees[self.pos]
+
+        # march along bridge path to determine cost of building a bridge/tunnel
+        while cur_x != other.x or cur_z != other.z:
+            delta_h = abs(height - build_area.worldslice.heightmaps['OCEAN_FLOOR'][(cur_x, cur_z)])
+            # cost is the height plus the cost of building a road on flat ground
+            cost += delta_h
+            cost += 2  # building a bridge should be more expensive than building a regular road
+
+            cur_x += dir[0]
+            cur_z += dir[1]
+
+        return cost

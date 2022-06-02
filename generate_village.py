@@ -37,18 +37,17 @@ def driver():
     build_area = BuildArea(sx, sz, ex, ez)
 
     # Create list of building types
-    # @Caveman you'll want to extend this list. Make sure that the names that you choose match the names
-    # that you fill out in data/structure_relationshipos/structure_attraction.csv
-    hayBale =  BuildingType("haybale", 8)
-    farm =  BuildingType("farm", 13)
-    small_house =  BuildingType("small_house", 10)
-    medium_house =  BuildingType("medium_house", 15)
-    townhall =  BuildingType("townhall", 20)
-    windmill =  BuildingType("windmill", 28)
-    cemetary =  BuildingType("graveyard", 24)
-    tavern =  BuildingType("tavern", 11)
-    adventure =  BuildingType("enforcement", 15)
-    misc =  BuildingType("misc", 10)
+    # NOTE: names here must match names in data/structure_relationshipos/structure_attraction.csv
+    hayBale = BuildingType("haybale", 8)
+    farm = BuildingType("farm", 13)
+    small_house = BuildingType("small_house", 10)
+    medium_house = BuildingType("medium_house", 15)
+    townhall = BuildingType("townhall", 20)
+    windmill = BuildingType("windmill", 28)
+    cemetary = BuildingType("graveyard", 24)
+    tavern = BuildingType("tavern", 11)
+    adventure = BuildingType("enforcement", 15)
+    misc = BuildingType("misc", 10)
 
     building_types = [hayBale, farm, small_house, medium_house, townhall, windmill, cemetary, tavern, adventure, misc]
 
@@ -60,10 +59,9 @@ def driver():
     if USE_HARD_CODED_BUILDINGS_AND_ROADS:
         building_locations, road_map = hard_code_buildings_and_roads(planner, False)
     else:
-        planner.seed_buildings(goal_buildings=40)
+        planner.seed_buildings(goal_buildings=10)
         building_locations = planner.building_locations
         road_map = planner.road_map
-
 
     # For all buildings, prep the land and build a base
     prep_land(building_locations, planner)
@@ -79,7 +77,6 @@ def driver():
     lamp_locations = build_roads(build_area.worldslice, road_map)
 
     # @Miko: The above lamp_locations should have all the global coordinates of where to put lamps. They should be in (x,y,z) form.
-
 
 
 if __name__ == '__main__':
