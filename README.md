@@ -31,7 +31,7 @@ Work done by WiFuchs, keonroohparvar, KamenShah, and mlkrajewski
     * python generate_village.py
 
 
-## Attrubtion
+## Attribution
 Components are inspired by project [GDMC2021Tsukuba] . Thanks MightyCode, Harckyl, YusufSenel for your hard work!
 
 
