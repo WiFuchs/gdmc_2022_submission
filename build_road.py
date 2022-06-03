@@ -19,6 +19,7 @@ from numpy import place
 
 from helper_functions import convert_coords
 
+
 def build_roads(WORLDSLICE, road_map):
     roads = []
 
@@ -27,9 +28,9 @@ def build_roads(WORLDSLICE, road_map):
     z = 0
     for z in range(road_map.shape[0]):
         for x in range(road_map.shape[1]):
-            if road_map[(x,z)] != False:
-                roads.append((x,z))
-    
+            if road_map[(x, z)] != False:
+                roads.append((x, z))
+
     # Bookkeeping for lamp index
     lamps = []
     BUILD_LAMP_EVERY = 40
@@ -39,26 +40,30 @@ def build_roads(WORLDSLICE, road_map):
     for road in roads:
         this_lamp_ind = this_lamp_ind - 1
         this_lamp_ind = (this_lamp_ind if this_lamp_ind >= 0 else BUILD_LAMP_EVERY)
-        this_lamp_location = build_road(WORLDSLICE, road[0], road[1], 'oak_planks', (this_lamp_ind == 0), find_road_orientation(road, road_map)) 
+        this_lamp_location = build_road(WORLDSLICE, road[0], road[1], 'oak_planks', (this_lamp_ind == 0),
+                                        find_road_orientation(road, road_map))
         if this_lamp_location != None:
             lamps.append(this_lamp_location)
 
     return lamps
 
+
 def find_road_orientation(road, road_map):
     this_x, this_z = road
-    
+
     # Check x direction
-    if (road_map[(this_x-1, this_z)] != False if this_x > 0 else False) or (road_map[(this_x+1, this_z)] != False if this_x < len(road_map) else False):
+    if (road_map[(this_x - 1, this_z)] != False if this_x > 0 else False) or (
+    road_map[(this_x + 1, this_z)] != False if this_x < len(road_map) else False):
         return 'along_x'
 
     # Check z direction
-    if (road_map[(this_x, this_z-1)] != False if this_z > 0 else False) or (road_map[(this_x, this_z+1)] != False if this_z < len(road_map[0]) else False):
+    if (road_map[(this_x, this_z - 1)] != False if this_z > 0 else False) or (
+    road_map[(this_x, this_z + 1)] != False if this_z < len(road_map[0]) else False):
         return 'along_z'
 
 
 def point_valid(point, heightmap):
-    x,z = point
+    x, z = point
     if x > heightmap.shape[0]:
         return False
     if z > heightmap.shape[1]:
@@ -67,16 +72,16 @@ def point_valid(point, heightmap):
         return False
     return True
 
-def place_road(x,y,z,height,base_block):
+
+def place_road(x, y, z, base_block, height):
+    GEO.placeCuboid(x, y+1, z, x, y + height, z, 'air')
     INTF.placeBlock(x, y, z, base_block)
-    GEO.placeCuboid(x,y,z,x,y+height,z,'air')
-        
-def build_bridges_and_tunnels(x, y, z, base_block, height, WORLDSLICE, direction):
+
+
+def build_bridges_and_tunnels(bridge, base_block, height, WORLDSLICE, direction):
     """
     Inputs:
-        x (int): local coordinate for x value
-        y (int): local coordinate for y value
-        z (int): local coordinate for z value
+        bridges (list of list of int): All the points in a bridge to be built
         base_block (string): The string name of the block, i.e. 'minecraft:cobblestone'
         height (int): The number of blocks you want cleared above the desired (x,y,z) bridge/tunnel
         direction (string): either 'along_x' or 'along_z' if that is their direction; if it is neither or None, 
@@ -85,34 +90,25 @@ def build_bridges_and_tunnels(x, y, z, base_block, height, WORLDSLICE, direction
     heights = WORLDSLICE.heightmaps['MOTION_BLOCKING_NO_LEAVES']
     start_x, start_z, _, _ = WORLDSLICE.rect
 
-    global_x, global_z = convert_coords((x,z), (start_x, start_z))
+    assert direction == 'along_z' or direction == 'along_x'
 
-    place_road(global_x, y, global_z, height, base_block)
-    
-    if direction == 'along_z':
-        if x < len(heights):
-            place_road(global_x+1, y-1, global_z, base_block, 5)
-        if x > 0:   
-            place_road(global_x-1, y-1, global_z, base_block, 5)
-        return None
-    
-    if direction == 'along_x':
-        if z < len(heights[0]):
-            place_road(global_x, y-1, global_z+1, base_block, 5)
-        if z > 0:   
-            place_road(global_x, y-1, global_z-1, base_block, 5)
-        return None
+    for x, y, z in bridge:
+        global_x, global_z = convert_coords((x, z), (start_x, start_z))
 
-    # If it is not along the x or z direction, it is diagonal. We then do a 3x3 box around it.
-    block_points = [(x-1, z-1), (x, z-1), (x+1, z-1), (x-1, z), (x+1, z), (x-1, z+1), (x, z+1), (x+1, z+1)]
-    for new_point in block_points:
-        # Ensures our point is in the boudaries
-        if point_valid(new_point, heights):
-            this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
-            place_road(this_global_x, y-1, this_global_z, base_block, 5)
+        place_road(global_x, y, global_z, base_block, height)
 
-
-
+        # if direction == 'along_z':
+        #     if x < len(heights):
+        #         place_road(global_x+1, y-1, global_z, base_block, 5)
+        #     if x > 0:
+        #         place_road(global_x-1, y-1, global_z, base_block, 5)
+        #
+        # elif direction == 'along_x':
+        #     if z < len(heights[0]):
+        #         place_road(global_x, y-1, global_z+1, base_block, 5)
+        #     if z > 0:
+        #         place_road(global_x, y-1, global_z-1, base_block, 5)
+        #     return None
 
 
 def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
@@ -130,42 +126,40 @@ def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
     heights = WORLDSLICE.heightmaps['MOTION_BLOCKING_NO_LEAVES']
     start_x, start_z, _, _ = WORLDSLICE.rect
 
-    this_y = heights[(x, z)] 
-    global_x, global_z = convert_coords((x,z), (start_x, start_z))
-    place_road(global_x, this_y-1, global_z, base_block, 5)
+    this_y = heights[(x, z)]
+    global_x, global_z = convert_coords((x, z), (start_x, start_z))
+    place_road(global_x, this_y - 1, global_z, base_block, 5)
 
     if direction == 'along_z':
         if x < len(heights):
-            place_road(global_x+1, this_y-1, global_z, base_block, 5)
-        if x > 0:   
-            place_road(global_x-1, this_y-1, global_z, base_block, 5)
+            place_road(global_x + 1, this_y - 1, global_z, base_block, 5)
+        if x > 0:
+            place_road(global_x - 1, this_y - 1, global_z, base_block, 5)
             if build_lamp:
-                return (global_x-1, this_y-1, global_z)
+                return (global_x - 1, this_y - 1, global_z)
         return None
-    
+
     if direction == 'along_x':
         if z < len(heights[0]):
-            place_road(global_x, this_y-1, global_z+1, base_block, 5)
-        if z > 0:   
-            place_road(global_x, this_y-1, global_z-1, base_block, 5)
+            place_road(global_x, this_y - 1, global_z + 1, base_block, 5)
+        if z > 0:
+            place_road(global_x, this_y - 1, global_z - 1, base_block, 5)
             if build_lamp:
-                return (global_x, this_y-1, global_z-1)
+                return (global_x, this_y - 1, global_z - 1)
         return None
 
     # If it is not along the x or z direction, it is diagonal. We then do a 3x3 box around it.
-    block_points = [(x-1, z-1), (x, z-1), (x+1, z-1), (x-1, z), (x+1, z), (x-1, z+1), (x, z+1), (x+1, z+1)]
+    block_points = [(x - 1, z - 1), (x, z - 1), (x + 1, z - 1), (x - 1, z), (x + 1, z), (x - 1, z + 1), (x, z + 1),
+                    (x + 1, z + 1)]
     for new_point in block_points:
         # Ensures our point is in the boudaries
         if point_valid(new_point, heights):
             this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
-            place_road(this_global_x, this_y-1, this_global_z, base_block, 5)
+            place_road(this_global_x, this_y - 1, this_global_z, base_block, 5)
     if build_lamp and point_valid(block_points[0], heights):
         lamp_x, lamp_z = convert_coords(block_points[0], (start_x, start_z))
-        return (lamp_x, this_y-1, lamp_z)
+        return (lamp_x, this_y - 1, lamp_z)
     return None
-
-
-
 
     """
     # Road in x direction
@@ -202,8 +196,6 @@ def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
     else:
         print('Diagonal road not supported (yet?)')
     """
- 
-
 
 
 # BELOW IS USED FOR TESTING
@@ -215,5 +207,3 @@ if __name__ == '__main__':
     WORLDSLICE = WL.WorldSlice(STARTX, STARTZ, ENDX + 1, ENDZ + 1)
     build_road(WORLDSLICE, 146, 369, 156, 369, 'oak_planks')
     build_road(WORLDSLICE, 156, 369, 156, 389, 'oak_planks')
-    
-
