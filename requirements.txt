@@ -1,0 +1,5 @@
+gdpc==5.0.2
+NBT==1.5.1
+numpy==1.22.3
+opencv_python==4.5.5.64
+requests==2.27.1

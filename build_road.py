@@ -9,6 +9,7 @@ and the script will ensure that the cooridinates have a solid, flat ground under
 # Imports
 from distutils.command.build import build
 from random import randint
+from re import L
 
 from gdpc import geometry as GEO
 from gdpc import interface as INTF
@@ -70,12 +71,52 @@ def place_road(x,y,z,height,base_block):
     INTF.placeBlock(x, y, z, base_block)
     GEO.placeCuboid(x,y,z,x,y+height,z,'air')
         
+def build_bridges_and_tunnels(x, y, z, base_block, height, WORLDSLICE, direction):
+    """
+    Inputs:
+        x (int): local coordinate for x value
+        y (int): local coordinate for y value
+        z (int): local coordinate for z value
+        base_block (string): The string name of the block, i.e. 'minecraft:cobblestone'
+        height (int): The number of blocks you want cleared above the desired (x,y,z) bridge/tunnel
+        direction (string): either 'along_x' or 'along_z' if that is their direction; if it is neither or None, 
+            then the direciton is assumed to be diagonal.
+    """
+    heights = WORLDSLICE.heightmaps['MOTION_BLOCKING_NO_LEAVES']
+    start_x, start_z, _, _ = WORLDSLICE.rect
+
+    global_x, global_z = convert_coords((x,z), (start_x, start_z))
+
+    place_road(global_x, y, global_z, height, base_block)
+    
+    if direction == 'along_z':
+        if x < len(heights):
+            place_road(global_x+1, y-1, global_z, base_block, 5)
+        if x > 0:   
+            place_road(global_x-1, y-1, global_z, base_block, 5)
+        return None
+    
+    if direction == 'along_x':
+        if z < len(heights[0]):
+            place_road(global_x, y-1, global_z+1, base_block, 5)
+        if z > 0:   
+            place_road(global_x, y-1, global_z-1, base_block, 5)
+        return None
+
+    # If it is not along the x or z direction, it is diagonal. We then do a 3x3 box around it.
+    block_points = [(x-1, z-1), (x, z-1), (x+1, z-1), (x-1, z), (x+1, z), (x-1, z+1), (x, z+1), (x+1, z+1)]
+    for new_point in block_points:
+        # Ensures our point is in the boudaries
+        if point_valid(new_point, heights):
+            this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
+            place_road(this_global_x, y-1, this_global_z, base_block, 5)
+
+
+
+
 
 def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
     """
-    This function will create a road from point (x1, _, z1) to (x2, _, z2). It places a block based off of
-    the string passed into 'base_block', and it creates 3-length roads with the middle being the straight 
-    line between the two points passed in.
 
     Input:
         WORLDSLICE (object): The worldslice object of our build area
@@ -117,7 +158,6 @@ def build_road(WORLDSLICE, x, z, base_block, build_lamp, direction=None):
         # Ensures our point is in the boudaries
         if point_valid(new_point, heights):
             this_global_x, this_global_z = convert_coords(new_point, (start_x, start_z))
-            INTF.placeBlock(this_global_x, this_y-1, this_global_z, base_block)
             place_road(this_global_x, this_y-1, this_global_z, base_block, 5)
     if build_lamp and point_valid(block_points[0], heights):
         lamp_x, lamp_z = convert_coords(block_points[0], (start_x, start_z))
