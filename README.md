@@ -8,11 +8,11 @@ Work done by WiFuchs, keonroohparvar, KamenShah, and mlkrajewski
  
 ## Requirement
 * python == 3.6
-* x == 1.3.0
-* x == 1.9
 * minecraft version = 1.16.5
 * [Forge Mod Launcher] (Download Recommended) 1.16.5 - 36.2.34
 * [GDMC http interface]
+* Libraries defined in [requirements.txt]
+    * Install with "pip install -r requirements.txt"
 
 ## Components
 1. Generate building locations in an environment
@@ -26,9 +26,9 @@ Work done by WiFuchs, keonroohparvar, KamenShah, and mlkrajewski
 1. Install dependencies
     * pip install -r requirements.txt
 2. Open minecraft launcher
-3. Ensure http interface @ http://localhost:9000/ is available
+3. Ensure http interface @ http://localhost:9000/ is running
 4. Run python script
-    * python generate_village.py
+    * python ./generate_village.py
 
 
 ## Attribution
@@ -41,3 +41,5 @@ Components are inspired by project [GDMC2021Tsukuba] . Thanks MightyCode, Harcky
 [GDMC http interface]:  <https://github.com/nilsgawlik/gdmc_http_interface> 
 
 [Forge Mod Launcher]: <https://files.minecraftforge.net/net/minecraftforge/forge/index_1.16.5.html>
+
+[requirements.txt]: <https://github.com/WiFuchs/gdmc_2022_submission/blob/master/requirements.txt>
