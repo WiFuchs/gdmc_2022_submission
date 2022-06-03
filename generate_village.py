@@ -8,7 +8,7 @@ import util.worldModification as worlModif
 from village_planner import VillagePlanner, BuildArea
 from util.encyclopedia import BuildingType
 from prep_land import prep_land
-from build_road import build_roads
+from build_road import build_roads, build_bridges_and_tunnels
 from generate_structure import generate_structures
 from helper_functions import *
 
@@ -66,6 +66,11 @@ def driver():
     # For all buildings, prep the land and build a base
     prep_land(building_locations, planner)
 
+    # Build roads, bridges & tunnels
+    lamp_locations = build_roads(build_area.worldslice, road_map)
+    for bridge, direction in planner.bridges:
+        build_bridges_and_tunnels(bridge, 'oak_planks', 3, build_area.worldslice, direction)
+
     # Build structures at all building seeds
     referenceCoordinates = [sx, sy, sz]
     generate_structures(
@@ -73,8 +78,7 @@ def driver():
         referenceCoordinates
     )
 
-    # Build roads
-    lamp_locations = build_roads(build_area.worldslice, road_map)
+
 
     # @Miko: The above lamp_locations should have all the global coordinates of where to put lamps. They should be in (x,y,z) form.
 

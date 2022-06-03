@@ -83,9 +83,9 @@ class VillagePlanner:
                 for road_pixel in roads:
                     self.road_map[road_pixel] = 1
                 for bridge_start, bridge_end in bridges:
-                    direction = "z" if bridge_start[0] == bridge_end[0] else "x"
+                    direction = "along_z" if bridge_start[0] == bridge_end[0] else "along_x"
                     height = self.build_area.heightmap_no_trees[bridge_start]
-                    if direction == "z":
+                    if direction == "along_z":
                         start_z = min(bridge_start[1], bridge_end[1])
                         end_z = max(bridge_start[1], bridge_end[1])
                         bridge_points = [(bridge_start[0], height, z) for z in range(start_z, end_z + 1)]
