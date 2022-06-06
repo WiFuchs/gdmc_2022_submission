@@ -1,7 +1,8 @@
 # GDMC 2022 submission, CSC 570, Cal Poly SLO
 
 Work done by WiFuchs, keonroohparvar, KamenShah, and mlkrajewski
-Advised by Dr. Rodrigo Canaan, 
+
+Advised by Dr. Rodrigo Canaan
 
 ## Introduction
  The goal of this project is to explore new algorithms in the lens of settlement creation in Minecraft. This implementation focuses on structure placement, location of distinct building types and village connection mechanisms. Our goal was to improve upon previous works and furthermore achieve village layouts that are analogous to what could be seen in the real world. While this work is domain specific to Minecraft, the frame of logic used in settlement creation may help improve procedural content generation used in other games. 
